@@ -1,0 +1,42 @@
+<html>
+	<form method = 'post'>
+    	<font size = '16'>
+    		<b>
+    			Register!
+    		</b>
+    	</font>
+    	<br> 
+    	<br>
+
+        {% block content %}
+        	Username: <input type = "text" name = "username" value = '{{self.username}}'>
+        	<br>
+        	<div>
+        		{{error_username}}
+    		</div>
+            <div>
+                {{error_user_exists}}
+            </div>
+        	
+        	Password: <input type = "password" name = "password" value=''>
+        	<br>
+        	<div>
+        		{{error_password}}
+        	</div>
+
+        	Confirm Password: <input type = "password" name = "verify" value =''>
+        	<br>
+        	<div>
+        		{{error_verify}}
+        	</div>
+        
+        	E-mail (Optional): <input type = "text" name = "email" value = '{{self.email}}'>
+        	<br>
+        	<div>
+        		{{error_email}}
+        	</div>
+        	<br>
+        	<input type ="submit">
+        {% endblock %}
+    </form>
+</html>

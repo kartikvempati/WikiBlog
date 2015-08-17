@@ -1,0 +1,26 @@
+<html>
+	<form method = 'post'>
+    	<font size = '16'>
+    		<b>
+    			Log In!
+    		</b>
+    	</font>
+    	<br> 
+    	<br>
+
+        {% block content %}
+            <div>
+            	Username: <input type = "text" name = "username" value = '{{username}}'>
+            	<br>
+            </div>
+            <div>
+            	Password: <input type = "password" name = "password" value=''>
+            	<br>
+            <div>
+                {{invalid_login}}
+            </div>
+        	<br>
+        	<input type ="submit">
+        {% endblock %}
+    </form>
+</html>
