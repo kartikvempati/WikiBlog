@@ -130,6 +130,44 @@ class HW2Signup(SignUpHandler):
     def done(self):
         self.redirect('/hw2/signup/welcome?username='+self.username)
 
+class Post(db.Model):
+    subject = db.StringProperty(required = True) # Can't make a database entity Blogpost without a subject
+    content = db.TextProperty(required = True)
+    date_submitted = db.DateTimeProperty(auto_now_add = True)
+
+class Blog(Base):
+    def get(self):
+        posts = db.GqlQuery("SELECT * FROM Post" " ORDER BY date_submitted DESC")
+        self.render("front.html", posts = posts)
+
+class NewPostHandler(Base):
+    def render_blog(self, subject="", content = "", error=""):
+        self.render("blog.html", subject = subject, content = content, error = error)
+
+    def get(self):
+        self.render_blog()
+
+    def post(self):
+        content = self.request.get("content")
+        subject = self.request.get("subject")
+        if subject and content:
+            a = Post(subject =subject, content = content)
+            a.put()
+            self.redirect("/posts/%s"% str(a.key().id()))
+        else:
+            error = "Please submit both a subject and content"
+            self.render("blog.html", subject = subject, content = content, error = error)
+
+class Permalink(Base):
+    def get(self,post_id):
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+        if not post:
+            self.error(404)
+            return
+        self.render("permlink.html", post = post)
+
+
 SECRET = 'kobebryanttop5alltime'
 
 def hash_str(s):
@@ -254,5 +292,9 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/hw4/welcome', HW4Welcome),
                                ('/hw4/signup', Register),
                                ('/hw4/login', Login),
-                               ('/hw4/logout', Logout)], 
+                               ('/hw4/logout', Logout),
+                               ('/blog', Blog),
+                               ('/blog/newpost', NewPostHandler),
+                               ('/blog/posts/([0-9]+)', Permalink)
+                               ], 
 								debug=True)
