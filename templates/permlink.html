@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+
+<html>
+	{% block content %}
+		<head>
+			<title>/py/</title>
+		</head>
+	<body>
+			<h2>{{post.subject}}</h2>
+			<h5>{{post.date_submitted}}</h5>
+		<hr>
+		<div>
+			<pre class = "blogpost-body">{{post.content}}</pre>
+		</div>
+	</body>
+	{% endblock %}
+</html>
+

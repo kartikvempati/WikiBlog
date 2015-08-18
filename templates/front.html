@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+
+<html>
+		<head>
+			<title>/py/</title>
+		</head>
+		<h2>p/KV's Text Board/</h2>
+		<hr>
+			{% for post in posts %}
+				<div class = "blogpost">
+					<div class = "blogpost-subject">
+						<h2>
+							{{post.subject}}
+						</h2>	
+					</div>
+					<div class = "blogpost-id">
+						<h5>
+							{{post.key().id()}}
+							<br>
+							{{post.date_submitted}}
+						</h5>
+					</div>
+					<pre class = "blogpost-body">{{post.content}}</pre>
+				</div>
+			{% endfor %}
+</html>

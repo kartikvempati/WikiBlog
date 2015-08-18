@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+<body>
+		<form method = "post">
+			<head>
+				<title>/py/post</title>
+			</head>
+			<h2>Submit A New Post!</h2>
+			<hr>
+			<label> 
+				<div>Subject</div>
+				<input name="subject"type="text"value={{subject}}>
+			</label>
+			<br>
+			<br> 
+			<label>
+				<div>Content</div>
+				<textarea style="width: 480px;height: 360px"name="content">{{content}}</textarea>
+			</label>
+
+			<div class ="error">
+				{{error}}
+			</div>
+			<div>
+				<input type = "submit" value='Post!'>
+			</div>
+		</form>
+
+</body>
+</html>
