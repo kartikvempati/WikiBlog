@@ -1,3 +1,5 @@
+import json
+
 import webapp2
 import cgi
 import string
@@ -8,6 +10,8 @@ from google.appengine.ext import db
 import hashlib
 import hmac
 import random
+import urllib2
+
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -40,6 +44,11 @@ class Base(webapp2.RequestHandler):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
+
+        if self.request.url.endswith(".json"):
+            self.format = 'json'
+        else:
+            self.format = 'html'
 
 # Main webpage handler.
 class MainHandler(Base):
@@ -134,11 +143,24 @@ class Post(db.Model):
     subject = db.StringProperty(required = True) # Can't make a database entity Blogpost without a subject
     content = db.TextProperty(required = True)
     date_submitted = db.DateTimeProperty(auto_now_add = True)
+   
+    def dict(self):
+        d = {'content':self.content,'subject':self.subject,'date_submitted':self.date_submitted.strftime('%c')}
+        return d
 
 class Blog(Base):
     def get(self):
-        posts = db.GqlQuery("SELECT * FROM Post" " ORDER BY date_submitted DESC")
-        self.render("front.html", posts = posts)
+        j= []
+        posts = db.GqlQuery("SELECT * FROM Post" " ORDER BY date_submitted DESC LIMIT 10")
+        if self.format =='html':
+            self.render("front.html", posts = posts)
+        else:
+            j = []
+            for post in posts:
+                j.append(post.dict())
+                json_text = json.dumps(j)
+                self.response.headers['Content-Type'] = 'application/json; charset=UTF-8'
+            self.write(json_text)
 
 class NewPostHandler(Base):
     def render_blog(self, subject="", content = "", error=""):
@@ -153,7 +175,7 @@ class NewPostHandler(Base):
         if subject and content:
             a = Post(subject =subject, content = content)
             a.put()
-            self.redirect("/posts/%s"% str(a.key().id()))
+            self.redirect("/blog/posts/%s"% str(a.key().id()))
         else:
             error = "Please submit both a subject and content"
             self.render("blog.html", subject = subject, content = content, error = error)
@@ -165,7 +187,12 @@ class Permalink(Base):
         if not post:
             self.error(404)
             return
-        self.render("permlink.html", post = post)
+        if self.format == 'html':
+            self.render("permlink.html", post = post)
+        else:
+            json_text = json.dumps(post.dict())
+            self.response.headers['Content-Type'] = 'application/json; charset=UTF-8'
+            self.write(json_text)
 
 
 SECRET = 'kobebryanttop5alltime'
@@ -221,11 +248,7 @@ class User(db.Model):
                     name = name,
                     pw_hash = pw_hash,
                     email = email)
-    # @classmethod
-    # def login(cls, name, pw):
-    #     u = cls.by_name(name):
-    #     if u and valid_pw(name, pw, u.pw_hash):
-    #         return u
+
 
 class Register(SignUpHandler):
     def done(self):
@@ -237,7 +260,7 @@ class Register(SignUpHandler):
             u = User.register(self.username, self.password, self.email)
             u.put()
             self.set_secure_cookie('user_id',str(u.key().id()))
-            self.redirect('/hw4/welcome')
+            self.redirect('/blog/welcome')
 
 class Login(Base):
     def get(self):
@@ -251,7 +274,7 @@ class Login(Base):
         u = User.by_name(username)
         if u and valid_pw(username, password, u.pw_hash):
             self.set_secure_cookie('user_id',str(u.key().id()))
-            self.redirect('/hw4/welcome')
+            self.redirect('/blog/welcome')
         else: 
             msg = "That username and password combination is not valid."
             self.render('login.html', invalid_login = msg)
@@ -261,7 +284,7 @@ class Logout(Base):
         self.request.cookies.get('user_id')
         self.response.headers.add_header('Set-Cookie',
                                          '%s=%s; Path=/'%('user_id',''))
-        self.redirect('/hw4/signup')
+        self.redirect('/blog/signup')
 
 class HW2Welcome(Base):
     def get(self):
@@ -289,12 +312,12 @@ app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/hw2/rot13', Rot13Handler),
                                ('/hw2/signup', HW2Signup),
                                ('/hw2/signup/welcome', HW2Welcome),
-                               ('/hw4/welcome', HW4Welcome),
-                               ('/hw4/signup', Register),
-                               ('/hw4/login', Login),
-                               ('/hw4/logout', Logout),
-                               ('/blog', Blog),
+                               ('/blog/welcome', HW4Welcome),
+                               ('/blog/signup', Register),
+                               ('/blog/login', Login),
+                               ('/blog/logout', Logout),
+                               ('/blog/?(?:\.json)?', Blog),
                                ('/blog/newpost', NewPostHandler),
-                               ('/blog/posts/([0-9]+)', Permalink)
+                               ('/blog/posts/([0-9]+)(?:\.json)?', Permalink)
                                ], 
 								debug=True)
